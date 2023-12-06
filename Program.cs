@@ -112,15 +112,11 @@ namespace FolderViewPainter
 
             if (Folder == "") { return; }
 
-            if (Folder.Length < 4)
-            {
-                CustomMessageBox.Show($"{sNoRoot}", sMain);
-                return;
-            }
-
             if (Folder.StartsWith("\\")) { ShellBagsKey = ShellBagsNet; }
 
             LeafPath = Path.GetFileName(Folder.TrimEnd('\\'));
+            if (LeafPath == "") { LeafPath = Folder[0].ToString(); }
+
 
             string UserName = Environment.GetEnvironmentVariable("UserName");
             UserPath = Folder.Replace($@"C:\Users\{UserName}", UserName);
@@ -583,6 +579,26 @@ namespace FolderViewPainter
             );
         }
 
+        // Find root view window by partial match to drive letter with parentheses
+        static AutomationElement FindWindowByPName(string name)
+        {
+            var windows = AutomationElement.RootElement.FindAll(
+                TreeScope.Children,
+                new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Window)
+            );
+
+            foreach (AutomationElement window in windows)
+            {
+                string windowName = window.Current.Name;
+                if (windowName.Contains($"({name.Replace("\\","")})"))
+                {
+                    return window;
+                }
+            }
+
+            return null;
+        }
+
         // Close the found window
         static void CloseWindow(AutomationElement window)
         {
@@ -708,6 +724,7 @@ namespace FolderViewPainter
         static void CloseWindows(string Folder, string LeafPath)
         {
             AutomationElement foundWindow;
+
             do
             {
                 foundWindow = FindWindowByName(Folder);
@@ -717,14 +734,28 @@ namespace FolderViewPainter
             }
             while (foundWindow != null);
 
-            do
+            if (Folder.Length < 4)
             {
-                foundWindow = FindWindowByName(LeafPath);
-                if (foundWindow == null) { break; }
-                CloseWindow(foundWindow);
-                Thread.Sleep(10);
+                do
+                {
+                    foundWindow = FindWindowByPName(Folder);
+                    if (foundWindow == null) { break; }
+                    CloseWindow(foundWindow);
+                    Thread.Sleep(10);
+                }
+                while (foundWindow != null);
             }
-            while (foundWindow != null);
+            else
+            {
+                do
+                {
+                    foundWindow = FindWindowByName(LeafPath);
+                    if (foundWindow == null) { break; }
+                    CloseWindow(foundWindow);
+                    Thread.Sleep(10);
+                }
+                while (foundWindow != null);
+            }
         }
 
         // Trick for determining which namespace view we're looking at
