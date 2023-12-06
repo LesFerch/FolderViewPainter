@@ -24,7 +24,7 @@ Lets say you've set up the Explorer folder views for maximum performance by sett
 
 ## How to Download and Install
 
-[![image](https://user-images.githubusercontent.com/79026235/152910441-59ba653c-5607-4f59-90c0-bc2851bf2688.png)Download the zip file](https://github.com/LesFerch/FolderViewPainter/releases/download/1.0.0/FolderViewPainter.zip)
+[![image](https://user-images.githubusercontent.com/79026235/152910441-59ba653c-5607-4f59-90c0-bc2851bf2688.png)Download the zip file](https://github.com/LesFerch/FolderViewPainter/releases/download/1.1.0/FolderViewPainter.zip)
 
 **Note**: Some antivirus software may falsely detect the download as a virus. This can happen any time you download a new executable and may require extra steps to whitelist the file.
 
@@ -128,8 +128,6 @@ It automatically detects and switches to a dark theme. Here are some screenshots
 ![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/dfb110e5-1c6d-4b14-a390-64633009f0c6)
 
 ## Known Limitations
-
-Folder View Painter does not currently support exporting or changing the view for the root folder of a drive. It has to do with the difficulty of identifying the correct window name as it can be prefixed with "Local Disk", "USB Drive" or the volume's label. This limitation may be resolved some day, but root folders should generally only contain folders, so this shouldn't really be problem.
 
 The Explorer window is opened and closed whenever you export or import a view. This is necessary because Microsoft does not provide an API for working with Explorer views. The app has to force Explorer to update the view in the registry by opening and closing the window for that view.
 
