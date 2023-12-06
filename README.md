@@ -129,7 +129,7 @@ It automatically detects and switches to a dark theme. Here are some screenshots
 
 ## Known Limitations
 
-Folder View Painter does not currently support exporting or changing the view for the root folder of a drive. It has to do with the odd way root folder names are stored in the registry. This limitation may be resolved some day, but root folders should generally only contain folders, so this shouldn't really be problem.
+Folder View Painter does not currently support exporting or changing the view for the root folder of a drive. It has to do with the difficulty of identifying the correct window name as it can be prefixed with "Local Disk", "USB Drive" or the volume's label. This limitation may be resolved some day, but root folders should generally only contain folders, so this shouldn't really be problem.
 
 The Explorer window is opened and closed whenever you export or import a view. This is necessary because Microsoft does not provide an API for working with Explorer views. The app has to force Explorer to update the view in the registry by opening and closing the window for that view.
 
