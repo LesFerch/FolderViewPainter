@@ -76,7 +76,7 @@ This command pops up a menu to let you select a folder view to import. It change
 
 ### Export View
 
-This command exports the current folder's view settings. It prompts for a name (by default it uses the current folder name) and will let you know if you enter a name that's already been used. Note that this dialog displays the number of folder views that are currently in the registry and the number of views you have exported. FolderViewPainter has to enumerate all of the registry's saved views 2-3 times whenever you export or import a view, so it will slow down over time as the number of registry views increases. It's recommended to run [WinSetView](https://lesferch.github.io/WinSetView/) once in a while to reset the saved view count when it gets into the thousands.
+This command exports the current folder's view settings. It prompts for a name (by default it uses the current folder name) and will let you know if you enter a name that's already been used. Note that this dialog displays the number of folder views that are currently in the registry and the number of views you have exported. FolderViewPainter has to enumerate all of the registry's saved views 2-3 times whenever you export or import a view, so it will slow down over time as the number of registry views increases. It's recommended to run [WinSetView](https://lesferch.github.io/WinSetView/) once in a while to reset the registry view count when it gets into the thousands.
 
 ![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/bbbf9dae-4ed8-43a6-a30b-b49e5895f708)
 
