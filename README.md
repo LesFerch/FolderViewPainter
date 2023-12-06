@@ -2,6 +2,8 @@
 
 ![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/3b41fba6-e7a6-427c-8ce7-0f48e56850f2)
 
+**Note**: The above menu is just an example. Your Import View menu will be totally custom, containing the views that you've exported with names that you've entered.
+
 ## Export and Import Windows Explorer Folder Views
 
 This program adds a right-click context menu to Windows Explorer that allows you to export and import folder views.
@@ -74,6 +76,8 @@ This command pops up a menu to let you select a folder view to import. It change
 
 ![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/3b41fba6-e7a6-427c-8ce7-0f48e56850f2)
 
+**Note**: The above menu is just an example. Your Import View menu will be totally custom, containing the views that you've exported with names that you've entered.
+
 ### Export View
 
 This command exports the current folder's view settings. It prompts for a name (by default it uses the current folder name) and will let you know if you enter a name that's already been used. Note that this dialog displays the number of folder views that are currently in the registry and the number of views you have exported. FolderViewPainter has to enumerate all of the registry's saved views 2-3 times whenever you export or import a view, so it will slow down over time as the number of registry views increases. It's recommended to run [WinSetView](https://lesferch.github.io/WinSetView/) once in a while to reset the registry view count when it gets into the thousands.
@@ -119,7 +123,7 @@ It automatically detects and switches to a dark theme. Here are some screenshots
 
 ![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/dfb110e5-1c6d-4b14-a390-64633009f0c6)
 
-## Known Limintations
+## Known Limitations
 
 Folder View Painter does not currently support exporting or changing the view for the root folder of a drive. It has to do with the odd way root folder names are stored in the registry. This limitation may be resolved some day, but root folders should generally only contain folders, so this shouldn't really be problem.
 
