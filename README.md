@@ -10,7 +10,7 @@ This program adds a right-click context menu to Windows Explorer that allows you
 
 You can export the current view and give that exported view any name you like. You can export as many different views, from as many different folders, as you like.
 
-Any time you want to change the current folder view, to use one of the exported views, it's as easy as right-clicking and selecting one of the exported views.
+Any time you want to change the current folder view, to use one of the exported views, it's as easy as right-clicking and selecting one of those views fron the Import View menu.
 
 ## Why would I need or want this program?
 
@@ -129,7 +129,7 @@ It automatically detects and switches to a dark theme. Here are some screenshots
 
 ## Known Limitations
 
-The Explorer window is opened and closed whenever you export or import a view. This is necessary because Microsoft does not provide an API for working with Explorer views. The app has to force Explorer to update the view in the registry by opening and closing the window for that view.
+The Explorer window is closed and re-opened whenever you export or import a view. This is necessary because Microsoft does not provide an API for working with Explorer views. The app has to force Explorer to update the view in the registry by closing and re-opening the window for that view.
 
 Sometimes two Explorer windows for the same folder will end up open. This is due to timing and race condition issues. It's a trade-off between reliability and speed and can't be made 100% perfect, but no harm comes from this issue.
 
