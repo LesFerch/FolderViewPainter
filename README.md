@@ -131,6 +131,8 @@ It automatically detects and switches to a dark theme. Here are some screenshots
 
 The Explorer window is closed and re-opened whenever you export or import a view. This is necessary because Microsoft does not provide an API for working with Explorer views. The app has to force Explorer to update the view in the registry by closing and re-opening the window for that view.
 
+The *GetBagMRU* function, in the C# source code, is derived from a PowerShell script by Keith Miller posted [here](https://stackoverflow.com/a/61240563/15764378).
+
 \
 \
 [![image](https://user-images.githubusercontent.com/79026235/153264696-8ec747dd-37ec-4fc1-89a1-3d6ea3259a95.png)](https://github.com/LesFerch/FolderViewPainter)
