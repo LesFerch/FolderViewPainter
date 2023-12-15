@@ -127,11 +127,9 @@ It automatically detects and switches to a dark theme. Here are some screenshots
 
 ![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/dfb110e5-1c6d-4b14-a390-64633009f0c6)
 
-## Known Limitations
+## Notes
 
 The Explorer window is closed and re-opened whenever you export or import a view. This is necessary because Microsoft does not provide an API for working with Explorer views. The app has to force Explorer to update the view in the registry by closing and re-opening the window for that view.
-
-Sometimes two Explorer windows for the same folder will end up open. This is due to timing and race condition issues. It's a trade-off between reliability and speed and can't be made 100% perfect, but no harm comes from this issue.
 
 \
 \
