@@ -10,7 +10,7 @@ This program adds a right-click context menu to Windows Explorer that allows you
 
 You can export the current view and give that exported view any name you like. You can export as many different views, from as many different folders, as you like.
 
-Any time you want to change the current folder view, to use one of the exported views, it's as easy as right-clicking and selecting one of those views fron the Import View menu.
+Any time you want to change the current folder view, to use one of the exported views, it's as easy as right-clicking and selecting one of those views from the Import View menu.
 
 ## Why would I need or want this program?
 
