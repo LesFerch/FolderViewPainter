@@ -704,7 +704,7 @@ namespace FolderViewPainter
                     using (RegistryKey commandKey = key.CreateSubKey("command"))
                     {
                         string cmd = $"\"{exePath}\" {cmds[i]}";
-                        if (i < 2) { cmd += " %v"; }
+                        if (i < 2) { cmd += " \"%v\""; }
                         commandKey.SetValue("", cmd);
                     }
                 }
