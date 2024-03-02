@@ -117,10 +117,10 @@ namespace FolderViewPainter
             LeafPath = Path.GetFileName(Folder.TrimEnd('\\'));
             if (LeafPath == "") { LeafPath = Folder[0].ToString(); }
 
-
-            string UserName = Environment.GetEnvironmentVariable("UserName");
-            UserPath = Folder.Replace($@"C:\Users\{UserName}", UserName);
-            ThisPCPath = Folder.Replace($@"C:\Users\{UserName}", "This PC");
+            string UserProfile = Environment.GetEnvironmentVariable("UserProfile");
+            string ProfileDir = Path.GetFileName(UserProfile);
+            UserPath = Folder.Replace(UserProfile, ProfileDir);
+            ThisPCPath = Folder.Replace(UserProfile, "This PC");
 
             bool IsSpecial = IsShellFolder(Folder);
             bool SaveView = false;
