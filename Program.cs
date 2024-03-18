@@ -17,6 +17,7 @@ namespace FolderViewPainter
     class Program
     {
         static string myName = typeof(Program).Namespace;
+        static string myExe = System.Reflection.Assembly.GetExecutingAssembly().Location;
         static string ShellKey = @"Software\Classes\Local Settings\Software\Microsoft\Windows\Shell";
         static string ShellBagsKey = $@"{ShellKey}\Bags";
         static string ShellBagsNet = @"Software\Microsoft\Windows\Shell\Bags";
@@ -838,8 +839,8 @@ namespace FolderViewPainter
                 dialog.ControlBox = true;
                 dialog.MaximizeBox = false;
                 dialog.MinimizeBox = false;
+                dialog.Icon = Icon.ExtractAssociatedIcon(myExe);
                 dialog.StartPosition = FormStartPosition.Manual;
-                dialog.ShowInTaskbar = false;
                 dialog.AutoSize = true;
                 dialog.AutoSizeMode = AutoSizeMode.GrowAndShrink;
                 dialog.AutoScroll = true;
@@ -1012,6 +1013,7 @@ namespace FolderViewPainter
             {
                 Text = title;
                 Font = new Font("Segoe UI", 10);
+                Icon = Icon.ExtractAssociatedIcon(myExe);
                 StartPosition = FormStartPosition.Manual;
                 Width = (int)(420 * ScaleFactor);
                 Height = (int)(210 * ScaleFactor);
@@ -1103,6 +1105,7 @@ namespace FolderViewPainter
             {
                 message = $"\n{message}";
 
+                Icon = Icon.ExtractAssociatedIcon(myExe);
                 StartPosition = FormStartPosition.Manual;
                 FormBorderStyle = FormBorderStyle.FixedDialog;
                 Text = caption;
@@ -1183,6 +1186,7 @@ namespace FolderViewPainter
                 }
                 message = $"\n{message}";
 
+                Icon = Icon.ExtractAssociatedIcon(myExe);
                 StartPosition = FormStartPosition.Manual;
                 Text = caption;
                 Width = (int)(300 * ScaleFactor);
@@ -1300,7 +1304,7 @@ namespace FolderViewPainter
                 FormBorderStyle = FormBorderStyle.FixedDialog;
                 MaximizeBox = false;
                 MinimizeBox = false;
-                ShowIcon = false;
+                Icon = Icon.ExtractAssociatedIcon(myExe);
                 StartPosition = FormStartPosition.Manual;
                 Width = (int)(300 * ScaleFactor);
                 Height = (int)(270 * ScaleFactor);
