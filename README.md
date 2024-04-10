@@ -24,7 +24,7 @@ Lets say you've set up the Explorer folder views for maximum performance by sett
 
 ## How to Download and Install
 
-[![image](https://user-images.githubusercontent.com/79026235/152910441-59ba653c-5607-4f59-90c0-bc2851bf2688.png)Download the zip file](https://github.com/LesFerch/FolderViewPainter/releases/download/1.1.3/FolderViewPainter.zip)
+[![image](https://github.com/LesFerch/WinSetView/assets/79026235/0188480f-ca53-45d5-b9ff-daafff32869e)Download the zip file](https://github.com/LesFerch/FolderViewPainter/releases/download/1.1.3/FolderViewPainter.zip)
 
 **Note**: Some antivirus software may falsely detect the download as a virus. This can happen any time you download a new executable and may require extra steps to whitelist the file.
 
@@ -37,6 +37,8 @@ Lets say you've set up the Explorer folder views for maximum performance by sett
 5. Double-click **FolderViewPainter.exe** to open the Install/Remove dialog and click **Install** to add the tool to the Explorer right-click menu.
 6. If you skipped step 3, then, in the SmartScreen window, click **More info** and then **Run anyway**.
 7. Click **OK** when the **Done** message box appears.
+
+**Note**: Some antivirus software may falsely detect the download as a virus. This can happen any time you download a new executable and may require extra steps to whitelist the file.
 
 ![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/13e7486e-ed78-4a6c-acab-7451d402ce51)
 
@@ -135,4 +137,4 @@ The *GetBagMRU* function, in the C# source code, is derived from a PowerShell sc
 
 \
 \
-[![image](https://user-images.githubusercontent.com/79026235/153264696-8ec747dd-37ec-4fc1-89a1-3d6ea3259a95.png)](https://github.com/LesFerch/FolderViewPainter)
+[![image](https://github.com/LesFerch/WinSetView/assets/79026235/63b7acbc-36ef-4578-b96a-d0b7ea0cba3a)](https://github.com/LesFerch/FolderViewPainter)
