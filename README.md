@@ -1,6 +1,6 @@
 # FolderViewPainter
 
-![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/3b41fba6-e7a6-427c-8ce7-0f48e56850f2)
+![image](https://github.com/user-attachments/assets/7d79bf43-cc3c-45af-ad50-32b1a1a041d2)
 
 **Note**: The above menu is just an example. Your Import View menu will be totally custom, containing the views that you've exported with names that you've entered.
 
@@ -40,9 +40,9 @@ Lets say you've set up the Explorer folder views for maximum performance by sett
 
 **Note**: Some antivirus software may falsely detect the download as a virus. This can happen any time you download a new executable and may require extra steps to whitelist the file.
 
-![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/13e7486e-ed78-4a6c-acab-7451d402ce51)
+![image](https://github.com/user-attachments/assets/ff7951ff-b13b-4a46-a727-9fdeeea565b4)
 
-![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/d14ec83a-c608-4650-bf73-10b22979c426)
+![image](https://github.com/user-attachments/assets/2c550f0d-730f-47ca-9f00-246b84cc11cc)
 
 **Note**: Sometimes the **Done** message pops up behind another open window. If that happens, you should see the FolderViewPainter icon on the taskbar, where you can click to bring that dialog to the front. Alternatively, you can minimize the window(s) that are on top of the dialog.
 
@@ -68,7 +68,7 @@ This program does NOT create a context menu handler. That is, there is no code t
 
 Right-click the background of an open folder and you should see the FolderViewPainter context menu:
 
-![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/312ed72d-5b50-4d28-bcd4-8f97c8fd098c)
+![image](https://github.com/user-attachments/assets/9c3c83d0-cdb5-4040-8f33-8709a462f7a3)
 
 Select the action you wish to perform. If nothing happens, then the Exe was likely moved after installing. In that case, just double-click the Exe to re-install.
 
@@ -76,7 +76,7 @@ Select the action you wish to perform. If nothing happens, then the Exe was like
 
 This command pops up a menu to let you select a folder view to import. It changes the view of the current folder to the view you select from the pop-up menu. You must export at least one view first.
 
-![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/3b41fba6-e7a6-427c-8ce7-0f48e56850f2)
+![image](https://github.com/user-attachments/assets/7d79bf43-cc3c-45af-ad50-32b1a1a041d2)
 
 **Note**: The above menu is just an example. Your Import View menu will be totally custom, containing the views that you've exported with names that you've entered.
 
@@ -88,7 +88,19 @@ Note that this dialog displays the number of folder views that are currently in 
 
 It's recommended to run [WinSetView](https://lesferch.github.io/WinSetView/) when the registry view count gets into the high hundreds or thousands. When you click Submit in WinSetView, your default views get set and the saved views are cleared, bringing that count down to a small number.
 
-![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/bbbf9dae-4ed8-43a6-a30b-b49e5895f708)
+![image](https://github.com/user-attachments/assets/b9e9cc1f-e021-4362-8fff-5813043f8b10)
+
+### Reset View
+
+This command resets the current folder's view to the current default view for its folder type.
+
+Explorer pulls the current default view from three possible sources, in the following order of precedence:
+
+1.  The view set using the `Apply to Folders` button.
+2.  The view set in the `FolderTypes` key located in `HKCU` (i.e. as set by WinSetView).
+3.  The view set in the `FolderTypes` key located in `HKLM` (i.e. Windows default).
+
+If you set all your folder default view preferences using WinSetView, and haven't touched the `Apply to Folders` button since doing that, the views you set in WinSetView are the views you will get when using the Reset Views command.
 
 ### Manage
 
@@ -98,7 +110,7 @@ This command opens a standard Explorer window to your SavedViews folder where yo
 
 This command brings up the Options dialog where you can choose to use the default (quick) import and export dialogs or use standard Windows Open and Save dialogs.
 
-![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/aac5ae63-240c-4951-810e-ec0a703cf9a2)
+![image](https://github.com/user-attachments/assets/bc663cc8-39e3-44a4-94de-786f8f6f83a4)
 
 ### Help
 
@@ -111,23 +123,23 @@ FolderViewPainter will detect your Windows language and use it, as long as it ha
 
 Here are some screenshots of FolderViewPainter for the German (DE) language:
 
-![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/038bc1a7-e605-4091-8019-fc9d3e225a36)
+![image](https://github.com/user-attachments/assets/fe6dcea1-2f67-4ac3-b381-6e130f6b3123)
 
-![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/8771bd2c-4854-45e7-bd29-eab82f3e9ce1)
+![image](https://github.com/user-attachments/assets/db6f9cac-8ade-49be-a2c9-cdfc9d3ec740)
 
-![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/8d46dc15-9f74-4ebf-a694-788c03003f58)
+![image](https://github.com/user-attachments/assets/ffff9802-89f4-4006-8ec0-c81cd20c2844)
 
 ## Dark Theme Compatible
 
 It automatically detects and switches to a dark theme. Here are some screenshots:
 
-![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/77415654-0c17-4099-9a73-894bdd21600d)
+![image](https://github.com/user-attachments/assets/c0b4ef2c-82d0-438f-975d-daeb815c5ab2)
 
-![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/8e7b54a6-f76d-45df-a334-0790eccf0237)
+![image](https://github.com/user-attachments/assets/0aee026a-4a6c-4d41-8ad7-0b66222b3926)
 
-![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/e0599fdd-316b-47dc-8664-765cbc8b9e8a)
+![image](https://github.com/user-attachments/assets/2096cd09-8c46-4676-b046-6d3bcd9189ff)
 
-![image](https://github.com/LesFerch/FolderViewPainter/assets/79026235/dfb110e5-1c6d-4b14-a390-64633009f0c6)
+![image](https://github.com/user-attachments/assets/b6b42b78-96e0-4389-820e-6bbac4ea2161)
 
 ## Notes
 
