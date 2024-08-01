@@ -23,9 +23,9 @@ namespace FolderViewPainter
         static string ShellBagsNet = @"Software\Microsoft\Windows\Shell\Bags";
 
         static string sMain = "Folder View Painter";
-        static string[] MenuKeys = { "Import", "Export", "Manage", "Options", "Help" };
-        static string[] cmds = { "/i", "/e", "/m", "/o", "/h" };
-        static string sMenuLabels = "Import View|Export View|Manage|Options|Help";
+        static string[] MenuKeys = { "Import", "Export", "Reset", "Manage", "Options", "Help" };
+        static string[] cmds = { "/i", "/e", "/r", "/m", "/o", "/h" };
+        static string sMenuLabels = "Import View|Export View|Reset View|Manage|Options|Help";
         static string[] MenuLabels = sMenuLabels.Split(new char[] { '|' });
         static string sOK = "OK";
         static string sYes = "Yes";
@@ -100,7 +100,7 @@ namespace FolderViewPainter
 
             if (command == "/remove") { RemoveContextMenuEntries(); return; }
 
-            if (command == "/h") { Process.Start($@"https://lesferch.github.io/{myName}/"); return; }
+            if (command == "/h") { Process.Start($@"https://lesferch.github.io/{myName}/#how-to-use"); return; }
 
             if (command == "/o")
             {
@@ -247,8 +247,15 @@ namespace FolderViewPainter
 
             for (int i = 0; i < NodeList.Length; i++)
             {
-                UpdateRegFile(NodeList[i], GUIDList[i], RegFile);
-                RunProcess("reg.exe", $"import \"{RegFile}\"");
+                if (command == "/r")
+                {
+                    DeleteAllValues(NodeList[i], GUIDList[i]);
+                }
+                else
+                {
+                    UpdateRegFile(NodeList[i], GUIDList[i], RegFile);
+                    RunProcess("reg.exe", $"import \"{RegFile}\"");
+                }
             }
 
             Process.Start("explorer.exe", Folder);
@@ -705,7 +712,7 @@ namespace FolderViewPainter
                     using (RegistryKey commandKey = key.CreateSubKey("command"))
                     {
                         string cmd = $"\"{exePath}\" {cmds[i]}";
-                        if (i < 2) { cmd += " \"%v\""; }
+                        if (i < 3) { cmd += " \"%v\""; }
                         commandKey.SetValue("", cmd);
                     }
                 }
@@ -756,6 +763,30 @@ namespace FolderViewPainter
                     Thread.Sleep(10);
                 }
                 while (foundWindow != null);
+            }
+        }
+
+        static void DeleteAllValues(string NodeNum, string GUID)
+        {
+            string keyPath = $@"{ShellBagsKey}\{NodeNum}\Shell\{GUID}";
+
+            try
+            {
+                using (RegistryKey key = Registry.CurrentUser.OpenSubKey(keyPath, true))
+                {
+                    if (key != null)
+                    {
+                        string[] valueNames = key.GetValueNames();
+
+                        foreach (string valueName in valueNames)
+                        {
+                            key.DeleteValue(valueName);
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
             }
         }
 
