@@ -125,7 +125,7 @@ Here are some screenshots of FolderViewPainter for the German (DE) language:
 
 ![image](https://github.com/user-attachments/assets/fe6dcea1-2f67-4ac3-b381-6e130f6b3123)
 
-![image](https://github.com/user-attachments/assets/db6f9cac-8ade-49be-a2c9-cdfc9d3ec740)
+![image](https://github.com/user-attachments/assets/a9191c00-7e24-4c41-9b3c-6521c5e69716)
 
 ![image](https://github.com/user-attachments/assets/ffff9802-89f4-4006-8ec0-c81cd20c2844)
 
