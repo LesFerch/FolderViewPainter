@@ -100,7 +100,7 @@ Explorer pulls the current default view from three possible sources, in the foll
 2.  The view set in the `FolderTypes` key located in `HKCU` (i.e. as set by WinSetView).
 3.  The view set in the `FolderTypes` key located in `HKLM` (i.e. Windows default).
 
-If you set all your folder default view preferences using WinSetView, and haven't touched the `Apply to Folders` button since doing that, the views you set in WinSetView are the views you will get when using the Reset Views command.
+If you set all your folder default view preferences using WinSetView, and haven't used the `Apply to Folders` button since doing that, the views you set in WinSetView are the views you will get when using the Reset View command.
 
 ### Manage
 
