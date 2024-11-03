@@ -37,7 +37,7 @@
     <StartupObject />
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Explorer.ico</ApplicationIcon>
+    <ApplicationIcon>FolderViewPainter.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup />
@@ -70,6 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Explorer.ico" />
+    <Content Include="FolderViewPainter.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

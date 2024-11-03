@@ -17,7 +17,7 @@ namespace FolderViewPainter
     class Program
     {
         static string myName = typeof(Program).Namespace;
-        static string myExe = System.Reflection.Assembly.GetExecutingAssembly().Location;
+        static string myExe = Assembly.GetExecutingAssembly().Location;
         static string ShellKey = @"Software\Classes\Local Settings\Software\Microsoft\Windows\Shell";
         static string ShellBagsKey = $@"{ShellKey}\Bags";
         static string ShellBagsNet = @"Software\Microsoft\Windows\Shell\Bags";
@@ -46,10 +46,15 @@ namespace FolderViewPainter
         static string sFilesavedialog = "File save dialog";
         static string sFileopendialog = "File open dialog";
         static string sNoExportedViews = "No exported views found";
+        static string sIncludeSettings = "Include Explorer settings";
+        static string sResetViewSetup = "Include additional Explorer settings with Reset View.";
+        static string sResetViewNote = "Recheck to update saved settings to current values.";
 
         static string Folder = "";
         static string MyFolder = AppDomain.CurrentDomain.BaseDirectory;
         static string RegFolder = $@"{MyFolder}SavedViews\";
+        static string ResetViewFile = $@"{RegFolder}!ResetView.ini";
+        static string myIniFile = $@"{MyFolder}\{myName}.ini";
         static string RegFile = "";
         static string newFileName = "";
         static string NodeType1 = null;
@@ -69,6 +74,8 @@ namespace FolderViewPainter
         static bool useOpenDialog = false;
         static bool useSaveDialog = false;
 
+        static CheckBox checkboxExp;
+
         [STAThread]
         static void Main(string[] args)
         {
@@ -84,7 +91,6 @@ namespace FolderViewPainter
                 return;
             }
 
-            Directory.CreateDirectory(RegFolder);
             string command = "";
 
             for (int i = 0; i < args.Length; i++)
@@ -102,6 +108,13 @@ namespace FolderViewPainter
 
             if (command == "/h") { Process.Start($@"https://lesferch.github.io/{myName}/#how-to-use"); return; }
 
+            if (!CanWriteHere())
+            {
+                RegFolder = $@"{Environment.GetEnvironmentVariable("AppData")}\SavedViews\";
+                ResetViewFile = $@"{RegFolder}!ResetView.ini";
+            }
+            Directory.CreateDirectory(RegFolder);
+
             if (command == "/o")
             {
                 var optionsDialog = new OptionsDialog();
@@ -109,7 +122,7 @@ namespace FolderViewPainter
                 return;
             }
 
-            if (command == "/m") { Process.Start($"explorer.exe", $"\"{RegFolder}\""); return; }
+            if (command == "/m") { Process.Start("explorer.exe", $"\"{RegFolder}\""); return; }
 
             if (Folder == "") { return; }
 
@@ -130,15 +143,12 @@ namespace FolderViewPainter
             {
                 if (useSaveDialog)
                 {
-                    string exeDirectory = Path.GetDirectoryName(Application.ExecutablePath);
-                    string savedViewsFolder = Path.Combine(exeDirectory, "SavedViews");
-
-                    if (Directory.Exists(savedViewsFolder))
+                    if (Directory.Exists(RegFolder))
                     {
                         SaveFileDialog fd = new SaveFileDialog
                         {
                             Filter = "Reg files (*.reg)|*.reg",
-                            InitialDirectory = savedViewsFolder,
+                            InitialDirectory = RegFolder,
                             FileName = LeafPath
                         };
                         DialogResult result = fd.ShowDialog();
@@ -166,7 +176,7 @@ namespace FolderViewPainter
                         RegFile = $@"{RegFolder}{newFileName}.reg";
                         if (File.Exists(RegFile))
                         {
-                            DialogResult result = TwoChoiceBox.Show($"{sAlreadyExists}", sMain, sYes, sNo);
+                            DialogResult result = TwoChoiceBox.Show(sAlreadyExists, sMain, sYes, sNo);
                             if (result == DialogResult.Yes) { break; }
                             if (result == DialogResult.Cancel) { return; }
                         }
@@ -182,15 +192,12 @@ namespace FolderViewPainter
             {
                 if (useOpenDialog)
                 {
-                    string exeDirectory = Path.GetDirectoryName(Application.ExecutablePath);
-                    string savedViewsFolder = Path.Combine(exeDirectory, "SavedViews");
-
-                    if (Directory.Exists(savedViewsFolder))
+                    if (Directory.Exists(RegFolder))
                     {
                         OpenFileDialog fd = new OpenFileDialog
                         {
                             Filter = "Reg files (*.reg)|*.reg",
-                            InitialDirectory = savedViewsFolder,
+                            InitialDirectory = RegFolder,
                             Multiselect = false,
                         };
                         fd.ShowDialog();
@@ -242,7 +249,8 @@ namespace FolderViewPainter
                 RegFile = $@"{RegFolder}{newFileName}.reg";
                 string GUID = GetGUID($@"{ShellBagsKey}\{ExportNode}\Shell\");
                 string keyPath = $@"HKCU\{ShellBagsKey}\{ExportNode}\Shell\{GUID}";
-                RunProcess("reg.exe", $"export \"{keyPath}\" \"{RegFile}\" /y");
+                ExportRegistryKey(keyPath, RegFile, true);
+                if (checkboxExp.Checked) ExportExplorerSettings(RegFile, false);
             }
 
             for (int i = 0; i < NodeList.Length; i++)
@@ -254,11 +262,21 @@ namespace FolderViewPainter
                 else
                 {
                     UpdateRegFile(NodeList[i], GUIDList[i], RegFile);
-                    RunProcess("reg.exe", $"import \"{RegFile}\"");
+                    ImportRegistryFile(RegFile);
                 }
             }
 
+            if (command == "/r" && File.Exists(ResetViewFile)) ImportRegistryFile(ResetViewFile);
+
             Process.Start("explorer.exe", Folder);
+        }
+
+        static void ExportExplorerSettings(string RegFile, bool overWrite)
+        {
+            string keyPath = $@"HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Modules\GlobalSettings";
+            ExportRegistryKey(keyPath, RegFile, overWrite);
+            keyPath = $@"HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced";
+            ExportRegistryKey(keyPath, RegFile, false);
         }
 
         //--------------------------------------------------------------------------------------------------------------
@@ -270,36 +288,68 @@ namespace FolderViewPainter
             FILESYSPATH = 0x80058000,
         }
 
+        // Test if app can write to its own folder (portable install)
+        static bool CanWriteHere()
+        {
+            try
+            {
+                string tempFile = $"{MyFolder}temp.txt";
+                File.WriteAllText(tempFile, "");
+                File.Delete(tempFile);
+                return true;
+            }
+            catch { return false; }
+        }
+
         // Load language strings from INI file
         static void LoadLanguageStrings()
         {
+            string iniFile = $@"{MyFolder}\language.ini";
+
+            if (!File.Exists(iniFile)) return;
+
             string lang = GetLang();
 
-            IniFile iniFile = new IniFile("language.ini");
-
-            sMenuLabels = iniFile.ReadString(lang, "sMenuLabels", sMenuLabels);
+            sMenuLabels = ReadString(iniFile, lang, "sMenuLabels", sMenuLabels);
             MenuLabels = sMenuLabels.Split(new char[] { '|' });
 
-            sMain = iniFile.ReadString(lang, "sMain", sMain);
-            sOK = iniFile.ReadString(lang, "sOK", sOK);
-            sYes = iniFile.ReadString(lang, "sYes", sYes);
-            sNo = iniFile.ReadString(lang, "sNo", sNo);
-            sInstall = iniFile.ReadString(lang, "sInstall", sInstall);
-            sRemove = iniFile.ReadString(lang, "sRemove", sRemove);
-            sDone = iniFile.ReadString(lang, "sDone", sDone);
-            sInput = iniFile.ReadString(lang, "sInput", sInput);
-            sCount1Msg = iniFile.ReadString(lang, "sCount1Msg", sCount1Msg);
-            sCount2Msg = iniFile.ReadString(lang, "sCount2Msg", sCount2Msg);
-            sNoRoot = iniFile.ReadString(lang, "sNoRoot", sNoRoot);
-            sAlreadyExists = iniFile.ReadString(lang, "sAlreadyExists", sAlreadyExists);
-            sSetup = iniFile.ReadString(lang, "sSetup", sSetup);
-            sImportInterface = iniFile.ReadString(lang, "sImportInterface", sImportInterface);
-            sExportInterface = iniFile.ReadString(lang, "sExportInterface", sExportInterface);
-            sQuickpickdialog = iniFile.ReadString(lang, "sQuickpickdialog", sQuickpickdialog);
-            sQuicksavedialog = iniFile.ReadString(lang, "sQuicksavedialog", sQuicksavedialog);
-            sFilesavedialog = iniFile.ReadString(lang, "sFilesavedialog", sFilesavedialog);
-            sFileopendialog = iniFile.ReadString(lang, "sFileopendialog", sFileopendialog);
-            sNoExportedViews = iniFile.ReadString(lang, "sNoExportedViews", sNoExportedViews);
+            sMain = ReadString(iniFile, lang, "sMain", sMain);
+            sOK = ReadString(iniFile, lang, "sOK", sOK);
+            sYes = ReadString(iniFile, lang, "sYes", sYes);
+            sNo = ReadString(iniFile, lang, "sNo", sNo);
+            sInstall = ReadString(iniFile, lang, "sInstall", sInstall);
+            sRemove = ReadString(iniFile, lang, "sRemove", sRemove);
+            sDone = ReadString(iniFile, lang, "sDone", sDone);
+            sInput = ReadString(iniFile, lang, "sInput", sInput);
+            sCount1Msg = ReadString(iniFile, lang, "sCount1Msg", sCount1Msg);
+            sCount2Msg = ReadString(iniFile, lang, "sCount2Msg", sCount2Msg);
+            sNoRoot = ReadString(iniFile, lang, "sNoRoot", sNoRoot);
+            sAlreadyExists = ReadString(iniFile, lang, "sAlreadyExists", sAlreadyExists);
+            sSetup = ReadString(iniFile, lang, "sSetup", sSetup);
+            sImportInterface = ReadString(iniFile, lang, "sImportInterface", sImportInterface);
+            sExportInterface = ReadString(iniFile, lang, "sExportInterface", sExportInterface);
+            sQuickpickdialog = ReadString(iniFile, lang, "sQuickpickdialog", sQuickpickdialog);
+            sQuicksavedialog = ReadString(iniFile, lang, "sQuicksavedialog", sQuicksavedialog);
+            sFilesavedialog = ReadString(iniFile, lang, "sFilesavedialog", sFilesavedialog);
+            sFileopendialog = ReadString(iniFile, lang, "sFileopendialog", sFileopendialog);
+            sNoExportedViews = ReadString(iniFile, lang, "sNoExportedViews", sNoExportedViews);
+            sIncludeSettings = ReadString(iniFile, lang, "sIncludeSettings", sIncludeSettings);
+            sResetViewSetup = ReadString(iniFile, lang, "sResetViewSetup", sResetViewSetup);
+            sResetViewNote = ReadString(iniFile, lang, "sResetViewNote", sResetViewNote);
+        }
+
+        static string ReadString(string iniFile, string section, string key, string defaultValue)
+        {
+            try
+            {
+                if (File.Exists(iniFile))
+                {
+                    return IniFileParser.ReadValue(section, key, defaultValue, iniFile);
+                }
+            }
+            catch { }
+
+            return defaultValue;
         }
 
         // INI file parser
@@ -367,7 +417,11 @@ namespace FolderViewPainter
         // Get the current system language
         static string GetLang()
         {
-            string lang = "en";
+            string lang = ReadString(myIniFile, "General", "Lang", "");
+            if (lang != "") return lang;
+
+            lang = "en";
+
             try
             {
                 RegistryKey key = Registry.CurrentUser.OpenSubKey("Control Panel\\International");
@@ -817,28 +871,11 @@ namespace FolderViewPainter
             return Registry.GetValue(keyPath, "Rev", null) != null;
         }
 
-        static void RunProcess(string executablePath, string arguments)
-        {
-            ProcessStartInfo psi = new ProcessStartInfo
-            {
-                FileName = executablePath,
-                Arguments = arguments,
-                CreateNoWindow = true,
-                UseShellExecute = false
-            };
-            using (Process process = new Process { StartInfo = psi })
-            {
-                process.Start();
-                process.WaitForExit();
-            }
-        }
 
         // Get count of exported view reg files
         static int GetSavedViewsCount()
         {
-            string exeDirectory = Path.GetDirectoryName(Application.ExecutablePath);
-            string savedViewsFolder = Path.Combine(exeDirectory, "SavedViews");
-            string[] regFiles = Directory.GetFiles(savedViewsFolder, "*.reg");
+            string[] regFiles = Directory.GetFiles(RegFolder, "*.reg");
             return regFiles.Length;
         }
 
@@ -884,12 +921,9 @@ namespace FolderViewPainter
                     dialog.ForeColor = Color.White;
                 }
 
-                string exeDirectory = Path.GetDirectoryName(Application.ExecutablePath);
-                string savedViewsFolder = Path.Combine(exeDirectory, "SavedViews");
-
-                if (Directory.Exists(savedViewsFolder))
+                if (Directory.Exists(RegFolder))
                 {
-                    string[] regFiles = Directory.GetFiles(savedViewsFolder, "*.reg");
+                    string[] regFiles = Directory.GetFiles(RegFolder, "*.reg");
                     if (regFiles.Length == 0)
                     {
                         CustomMessageBox.Show($"{sNoExportedViews}", sMain);
@@ -900,17 +934,14 @@ namespace FolderViewPainter
                     int maxWidth = 0;
                     int minWidth = (int)(120 * ScaleFactor);
 
-                    using (Graphics g = dialog.CreateGraphics())
+                    foreach (string regFile in regFiles)
                     {
-                        foreach (string regFile in regFiles)
-                        {
-                            string itemName = Path.GetFileNameWithoutExtension(regFile);
-                            SizeF size = g.MeasureString(itemName, new Font("Segoe UI", 10));
-                            maxWidth = Math.Max(maxWidth, (int)size.Width);
-                        }
+                        string itemName = Path.GetFileNameWithoutExtension(regFile);
+                        int w = TextRenderer.MeasureText(itemName, new Font("Segoe UI", 10)).Width;
+                        maxWidth = Math.Max(maxWidth, w);
                     }
-                    maxWidth += (int)(20 * ScaleFactor);
-                    if (maxWidth < minWidth) { maxWidth = minWidth; }
+
+                    if (maxWidth < minWidth) maxWidth = minWidth;
 
                     foreach (string regFile in regFiles)
                     {
@@ -1047,7 +1078,7 @@ namespace FolderViewPainter
                 Icon = Icon.ExtractAssociatedIcon(myExe);
                 StartPosition = FormStartPosition.Manual;
                 Width = (int)(420 * ScaleFactor);
-                Height = (int)(210 * ScaleFactor);
+                Height = (int)(230 * ScaleFactor);
                 FormBorderStyle = FormBorderStyle.FixedDialog;
                 MaximizeBox = false;
                 MinimizeBox = false;
@@ -1069,6 +1100,15 @@ namespace FolderViewPainter
                 textBoxInput.BorderStyle = BorderStyle.FixedSingle;
                 Controls.Add(textBoxInput);
 
+                checkboxExp = new CheckBox();
+                checkboxExp.Left = (int)(10 * ScaleFactor);
+                checkboxExp.Top = textBoxInput.Bottom + (int)(10 * ScaleFactor);
+                checkboxExp.Font = new Font("Segoe UI", 10);
+                checkboxExp.Text = sIncludeSettings;
+                checkboxExp.Checked = false;
+                checkboxExp.AutoSize = true;
+                Controls.Add(checkboxExp);
+
                 buttonOK = new Button();
                 buttonOK.Text = sOK;
                 buttonOK.Width = (int)(75 * ScaleFactor);
@@ -1082,6 +1122,8 @@ namespace FolderViewPainter
                     buttonOK.FlatStyle = FlatStyle.Flat;
                     buttonOK.FlatAppearance.BorderColor = SystemColors.Highlight;
                     buttonOK.FlatAppearance.BorderSize = 1;
+                    buttonOK.BackColor = Color.FromArgb(60, 60, 60);
+                    buttonOK.FlatAppearance.MouseOverBackColor = Color.Black;
                     DarkTitleBar(Handle);
                     BackColor = Color.FromArgb(32, 32, 32);
                     ForeColor = Color.White;
@@ -1151,12 +1193,8 @@ namespace FolderViewPainter
                 messageLabel.TextAlign = ContentAlignment.TopCenter;
                 messageLabel.Dock = DockStyle.Fill;
 
-                using (Graphics g = CreateGraphics())
-                {
-                    SizeF size = g.MeasureString(message, new Font("Segoe UI", 10), Width);
-                    Height = Math.Max(Height, (int)(size.Height + (int)(100 * ScaleFactor)));
-                }
-
+                int h = TextRenderer.MeasureText(message, new Font("Segoe UI", 10)).Height;
+                Height = Math.Max(Height, h);
 
                 buttonOK = new Button();
                 buttonOK.Text = sOK;
@@ -1171,6 +1209,8 @@ namespace FolderViewPainter
                     buttonOK.FlatStyle = FlatStyle.Flat;
                     buttonOK.FlatAppearance.BorderColor = SystemColors.Highlight;
                     buttonOK.FlatAppearance.BorderSize = 1;
+                    buttonOK.BackColor = Color.FromArgb(60, 60, 60);
+                    buttonOK.FlatAppearance.MouseOverBackColor = Color.Black;
                     DarkTitleBar(Handle);
                     BackColor = Color.FromArgb(32, 32, 32);
                     ForeColor = Color.White;
@@ -1210,11 +1250,10 @@ namespace FolderViewPainter
             public TwoChoiceBox(string message, string caption, string button1, string button2)
             {
                 int b2Width = (int)(75 * ScaleFactor);
-                using (Graphics g = CreateGraphics())
-                {
-                    SizeF size = g.MeasureString(button2, new Font("Segoe UI", 9));
-                    b2Width = Math.Max((int)size.Width, b2Width);
-                }
+
+                int w = TextRenderer.MeasureText(button2, new Font("Segoe UI", 10)).Height;
+                b2Width = Math.Max(b2Width, w);
+
                 message = $"\n{message}";
 
                 Icon = Icon.ExtractAssociatedIcon(myExe);
@@ -1255,9 +1294,13 @@ namespace FolderViewPainter
                     buttonYes.FlatStyle = FlatStyle.Flat;
                     buttonYes.FlatAppearance.BorderColor = SystemColors.Highlight;
                     buttonYes.FlatAppearance.BorderSize = 1;
+                    buttonYes.BackColor = Color.FromArgb(60, 60, 60);
+                    buttonYes.FlatAppearance.MouseOverBackColor = Color.Black;
                     buttonNo.FlatStyle = FlatStyle.Flat;
                     buttonNo.FlatAppearance.BorderColor = SystemColors.Highlight;
                     buttonNo.FlatAppearance.BorderSize = 1;
+                    buttonNo.BackColor = Color.FromArgb(60, 60, 60);
+                    buttonNo.FlatAppearance.MouseOverBackColor = Color.Black;
                     DarkTitleBar(Handle);
                     BackColor = Color.FromArgb(32, 32, 32);
                     ForeColor = Color.White;
@@ -1317,6 +1360,8 @@ namespace FolderViewPainter
             private RadioButton classicSaveRadioButton;
             private RadioButton quickOpenRadioButton;
             private RadioButton classicOpenRadioButton;
+            private CheckBox checkboxRC;
+            private Label labelRC;
             private Button buttonOK;
 
             public OptionsDialog()
@@ -1331,14 +1376,21 @@ namespace FolderViewPainter
 
             private void InitializeComponents()
             {
+                using (Font font = new Font("Segoe UI", 10))
+                {
+                    int setupWidth = TextRenderer.MeasureText(sResetViewSetup, font).Width;
+                    int noteWidth = TextRenderer.MeasureText(sResetViewNote, font).Width;
+                    int calculatedWidth = Math.Max(300, Math.Max(setupWidth, noteWidth)) + (int)(50 * ScaleFactor);
+                    Width = calculatedWidth;
+                }
+
                 Text = sMain;
                 FormBorderStyle = FormBorderStyle.FixedDialog;
                 MaximizeBox = false;
                 MinimizeBox = false;
                 Icon = Icon.ExtractAssociatedIcon(myExe);
                 StartPosition = FormStartPosition.Manual;
-                Width = (int)(300 * ScaleFactor);
-                Height = (int)(270 * ScaleFactor);
+                Height = (int)(324 * ScaleFactor);
                 Font = new Font("Segoe UI", 10);
 
                 var importGroupBox = new GroupBox
@@ -1347,7 +1399,7 @@ namespace FolderViewPainter
                     Text = sImportInterface,
                     Location = new Point((int)(10 * ScaleFactor), (int)(10 * ScaleFactor)),
                     Width = Width - (int)(40 * ScaleFactor),
-                    Height = (int)(80 * ScaleFactor)
+                    Height = (int)(70 * ScaleFactor)
                 };
 
                 if (Dark) { importGroupBox.ForeColor = Color.White; }
@@ -1377,7 +1429,7 @@ namespace FolderViewPainter
                     Left = (int)(10 * ScaleFactor),
                     Top = (int)(100 * ScaleFactor),
                     Width = Width - (int)(40 * ScaleFactor),
-                    Height = (int)(80 * ScaleFactor)
+                    Height = (int)(70 * ScaleFactor)
                 };
 
                 if (Dark) { exportGroupBox.ForeColor = Color.White; }
@@ -1409,8 +1461,26 @@ namespace FolderViewPainter
                     ForeColor = Color.White;
                 }
 
+                checkboxRC = new CheckBox();
+                checkboxRC.Font = new Font("Segoe UI", 10);
+                checkboxRC.Text = sResetViewSetup;
+                checkboxRC.Checked = File.Exists(ResetViewFile);
+                checkboxRC.AutoSize = true;
+                checkboxRC.Left = (int)(10 * ScaleFactor);
+                checkboxRC.Top = (int)(190 * ScaleFactor);
+                checkboxRC.CheckedChanged += new EventHandler(CB1);
+
+                labelRC = new Label();
+                labelRC.Font = new Font("Segoe UI", 10);
+                labelRC.Text = sResetViewNote;
+                labelRC.AutoSize = true;
+                labelRC.Left = (int)(26 * ScaleFactor);
+                labelRC.Top = (int)(212 * ScaleFactor);
+
                 Controls.Add(importGroupBox);
                 Controls.Add(exportGroupBox);
+                Controls.Add(checkboxRC);
+                Controls.Add(labelRC);
 
                 buttonOK = new Button();
                 buttonOK.Text = sOK;
@@ -1425,6 +1495,8 @@ namespace FolderViewPainter
                     buttonOK.FlatStyle = FlatStyle.Flat;
                     buttonOK.FlatAppearance.BorderColor = SystemColors.Highlight;
                     buttonOK.FlatAppearance.BorderSize = 1;
+                    buttonOK.BackColor = Color.FromArgb(60, 60, 60);
+                    buttonOK.FlatAppearance.MouseOverBackColor = Color.Black;
                 }
                 Controls.Add(buttonOK);
 
@@ -1441,6 +1513,10 @@ namespace FolderViewPainter
                 Location = new Point(dialogX, dialogY);
             }
 
+            private void CB1(object sender, EventArgs e)
+            {
+                if (checkboxRC.Checked) { ExportExplorerSettings(ResetViewFile, true); } else { File.Delete(ResetViewFile); }
+            }
             private void buttonOK_Click(object sender, EventArgs e)
             {
                 SaveSettingsToRegistry();
@@ -1488,5 +1564,442 @@ namespace FolderViewPainter
             DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_USE_IMMERSIVE_DARK_MODE, ref preference, sizeof(uint));
 
         }
+
+        // IMPORT function
+        static void ImportRegistryFile(string filePath)
+        {
+            try
+            {
+                if (!File.Exists(filePath))
+                {
+                    Console.WriteLine($"File not found: {filePath}");
+                    return;
+                }
+
+                // Detect encoding based on the file content
+                Encoding encoding = DetectFileEncoding(filePath);
+
+                using (StreamReader reader = new StreamReader(filePath, encoding))
+                {
+                    string line;
+                    RegistryKey currentKey = null;
+                    string accumulatedLine = ""; // To accumulate lines with continuation characters
+
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        line = line.Trim();
+
+                        // Skip empty or comment lines
+                        if (string.IsNullOrWhiteSpace(line) || line.StartsWith(";"))
+                            continue;
+
+                        // Handle line continuation (backslash at the end)
+                        if (line.EndsWith("\\"))
+                        {
+                            accumulatedLine += line.Substring(0, line.Length - 1).Trim();
+                            continue; // Wait for the next line to continue processing
+                        }
+                        else
+                        {
+                            // Accumulate the last part of the line
+                            accumulatedLine += line.Trim();
+                        }
+
+                        // Now process the complete accumulated line
+                        if (accumulatedLine.StartsWith("[") && accumulatedLine.EndsWith("]"))
+                        {
+                            // It's a key, so we process it as such
+                            string keyPath = accumulatedLine.Trim('[', ']');
+                            currentKey?.Close();
+
+                            currentKey = CreateOrOpenRegistryKey(keyPath);
+                        }
+                        else if (currentKey != null)
+                        {
+                            ParseAndSetRegistryValue(currentKey, accumulatedLine);
+                        }
+
+                        accumulatedLine = "";
+                    }
+
+                    currentKey?.Close();
+                }
+
+                Console.WriteLine($"Successfully imported registry from file: {filePath}");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error importing registry: {ex.Message}");
+            }
+        }
+
+        // Function to detect encoding by reading the byte order mark (BOM) or file content
+        static Encoding DetectFileEncoding(string filePath)
+        {
+            using (FileStream file = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            {
+                if (file.Length >= 2)
+                {
+                    byte[] bom = new byte[2];
+                    file.Read(bom, 0, 2);
+
+                    // Check for UTF-16 LE BOM (FF FE)
+                    if (bom[0] == 0xFF && bom[1] == 0xFE)
+                        return Encoding.Unicode;
+
+                    // Check for UTF-16 BE BOM (FE FF)
+                    if (bom[0] == 0xFE && bom[1] == 0xFF)
+                        return Encoding.BigEndianUnicode;
+                }
+
+                // Default to ANSI (UTF-8 without BOM)
+                return Encoding.Default;
+            }
+        }
+
+        static RegistryKey CreateOrOpenRegistryKey(string keyPath)
+        {
+            try
+            {
+                keyPath = NormalizeKeyPath(keyPath);
+
+                int firstSlashIndex = keyPath.IndexOf('\\');
+                if (firstSlashIndex == -1)
+                {
+                    // No subkey exists, just return the base key
+                    return GetBaseRegistryKey(keyPath, writable: true, createSubKey: true);
+                }
+
+                string baseKeyName = keyPath.Substring(0, firstSlashIndex);
+                string subKeyPath = keyPath.Substring(firstSlashIndex + 1);
+
+                // Get the base registry key (e.g., HKEY_CURRENT_USER)
+                RegistryKey baseKey = GetBaseRegistryKey(baseKeyName, writable: true, createSubKey: true);
+                if (baseKey == null)
+                {
+                    throw new InvalidOperationException($"Invalid base registry key: {baseKeyName}");
+                }
+
+                // Create the subkey path if it doesn't exist
+                return CreateSubKeyPath(baseKey, subKeyPath);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error creating or opening registry key '{keyPath}': {ex.Message}");
+                return null;
+            }
+        }
+
+        static RegistryKey CreateSubKeyPath(RegistryKey baseKey, string subKeyPath)
+        {
+            try
+            {
+                // Recursively create or open each subkey in the path
+                RegistryKey currentKey = baseKey.CreateSubKey(subKeyPath, true);
+                if (currentKey == null)
+                {
+                    throw new InvalidOperationException($"Failed to create or open registry subkey: {subKeyPath}");
+                }
+
+                return currentKey;
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error creating subkey path '{subKeyPath}': {ex.Message}");
+                return null;
+            }
+        }
+
+        static void ParseAndSetRegistryValue(RegistryKey key, string line)
+        {
+            string name; string valueData; bool empty;
+
+            void GetNameAndData(string pattern)
+            {
+                string[] parts = line.Split(new string[] { pattern }, 2, StringSplitOptions.None);
+                name = parts[0].Substring(1).Replace("\\\"", "\"").Replace("\\\\", "\\");
+                if (name == "@") name = null;
+                valueData = parts[1].Substring(0, parts[1].Length);
+                if (valueData.EndsWith("\"")) valueData = valueData.Substring(0, valueData.Length - 1);
+                valueData = valueData.Replace("\\\"", "\"").Replace("\\\\", "\\");
+                empty = valueData.Length == 0;
+            }
+
+            void TrimThis(string pattern)
+            {
+                if (valueData.EndsWith(pattern)) valueData = valueData.Substring(0, valueData.Length - pattern.Length);
+                if (valueData == "00,00") valueData = "";
+                empty = valueData.Length == 0;
+            }
+
+            if (line.StartsWith("@="))
+            {
+                line = $"\"@\"{line.Substring(1)}";
+            }
+
+            string regType = string.Empty;
+
+            if (line.Contains("\"=\"")) regType = "REG_SZ";
+            else if (line.Contains("\"=dword:")) regType = "REG_DWORD";
+            else if (line.Contains("\"=hex(b):")) regType = "REG_QWORD";
+            else if (line.Contains("\"=hex:")) regType = "REG_BINARY";
+            else if (line.Contains("\"=hex(2):")) regType = "REG_EXPAND_SZ";
+            else if (line.Contains("\"=hex(7):")) regType = "REG_MULTI_SZ";
+            else if (line.Contains("\"=hex(0):")) regType = "REG_NONE";
+
+            switch (regType)
+            {
+                case "REG_SZ":
+                    GetNameAndData("\"=\"");
+                    key.SetValue(name, valueData, RegistryValueKind.String);
+                    break;
+
+                case "REG_DWORD":
+                    GetNameAndData("\"=dword:");
+                    uint dwordValue = Convert.ToUInt32(valueData, 16);
+                    key.SetValue(name, (int)dwordValue, RegistryValueKind.DWord);
+                    break;
+
+                case "REG_QWORD":
+                    GetNameAndData("\"=hex(b):");
+                    string[] bytePairs = valueData.Split(new[] { ',' });
+                    ulong qwordValue = 0;
+                    for (int i = 0; i < bytePairs.Length; i++)
+                    {
+                        qwordValue |= ((ulong)Convert.ToByte(bytePairs[i], 16)) << (i * 8);
+                    }
+                    key.SetValue(name, qwordValue, RegistryValueKind.QWord);
+                    break;
+
+                case "REG_BINARY":
+                    GetNameAndData("\"=hex:");
+                    if (empty)
+                    {
+                        key.SetValue(name, new byte[0], RegistryValueKind.Binary);
+                    }
+                    else
+                    {
+                        byte[] binaryData = valueData.Split(',').Select(h => Convert.ToByte(h, 16)).ToArray();
+                        key.SetValue(name, binaryData, RegistryValueKind.Binary);
+                    }
+                    break;
+
+                case "REG_EXPAND_SZ":
+                    GetNameAndData("\"=hex(2):");
+                    TrimThis(",00,00");
+                    TrimThis(",00,00");
+
+                    if (empty)
+                    {
+                        key.SetValue(name, string.Empty, RegistryValueKind.ExpandString);
+                    }
+                    else
+                    {
+                        byte[] binaryData = valueData.Split(',').Select(h => Convert.ToByte(h, 16)).ToArray();
+                        string expandSzValue = Encoding.Unicode.GetString(binaryData);
+                        key.SetValue(name, expandSzValue, RegistryValueKind.ExpandString);
+                    }
+                    break;
+
+                case "REG_MULTI_SZ":
+                    GetNameAndData("\"=hex(7):");
+                    TrimThis(",00,00");
+                    TrimThis(",00,00");
+
+                    if (empty)
+                    {
+                        key.SetValue(name, new string[] { string.Empty }, RegistryValueKind.MultiString);
+                    }
+                    else
+                    {
+                        byte[] binaryData = valueData.Split(',').Select(h => Convert.ToByte(h, 16)).ToArray();
+                        string multiSzValue = Encoding.Unicode.GetString(binaryData);
+                        string[] multiStringArray = multiSzValue.Split(new[] { '\0' });
+                        key.SetValue(name, multiStringArray, RegistryValueKind.MultiString);
+                    }
+                    break;
+
+                case "REG_NONE":
+                    GetNameAndData("\"=hex(0):");
+                    if (empty)
+                    {
+                        key.SetValue(name, Encoding.Unicode.GetBytes("" + '\0'), RegistryValueKind.None);
+                    }
+                    else
+                    {
+                        byte[] binaryData = valueData.Split(',').Select(h => Convert.ToByte(h, 16)).ToArray();
+                        key.SetValue(name, binaryData, RegistryValueKind.None);
+                    }
+                    break;
+
+                default:
+                    throw new InvalidOperationException("Unknown registry value type.");
+            }
+        }
+
+        // EXPORT function
+        static void ExportRegistryKey(string keyPath, string filePath, bool forceOverwrite)
+        {
+            keyPath = NormalizeKeyPath(keyPath);
+            bool append = false;
+
+            try
+            {
+                if (File.Exists(filePath) && !forceOverwrite) append = true;
+
+                using (RegistryKey key = GetBaseRegistryKey(keyPath))
+                {
+                    if (key == null)
+                    {
+                        Console.Error.WriteLine($"Registry key not found: {keyPath}");
+                        return;
+                    }
+
+                    using (StreamWriter writer = new StreamWriter(filePath, append, Encoding.Unicode))
+                    {
+                        if (!append) writer.WriteLine("Windows Registry Editor Version 5.00\r\n");
+                        ExportKey(key, keyPath, writer);
+                    }
+                    Console.WriteLine($"Registry exported to file: {filePath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error exporting registry: {ex.Message}");
+            }
+        }
+
+        static string NormalizeKeyPath(string keyPath)
+        {
+            // map abbreviations and full names to their full uppercase versions
+            var keyMappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "HKLM", "HKEY_LOCAL_MACHINE" },
+                { "HKEY_LOCAL_MACHINE", "HKEY_LOCAL_MACHINE" },
+                { "HKCU", "HKEY_CURRENT_USER" },
+                { "HKEY_CURRENT_USER", "HKEY_CURRENT_USER" },
+                { "HKCR", "HKEY_CLASSES_ROOT" },
+                { "HKEY_CLASSES_ROOT", "HKEY_CLASSES_ROOT" },
+                { "HKU", "HKEY_USERS" },
+                { "HKEY_USERS", "HKEY_USERS" },
+                { "HKCC", "HKEY_CURRENT_CONFIG" },
+                { "HKEY_CURRENT_CONFIG", "HKEY_CURRENT_CONFIG" }
+            };
+
+            string[] pathParts = keyPath.Split(new char[] { '\\' }, 2);
+
+            if (keyMappings.ContainsKey(pathParts[0]))
+            {
+                pathParts[0] = keyMappings[pathParts[0]];
+            }
+            return pathParts.Length > 1 ? $"{pathParts[0]}\\{pathParts[1]}" : pathParts[0];
+        }
+
+        static void ExportKey(RegistryKey key, string keyPath, StreamWriter writer)
+        {
+            writer.WriteLine($"[{keyPath}]");
+            foreach (string valueName in key.GetValueNames())
+            {
+                object value = key.GetValue(valueName, null, RegistryValueOptions.DoNotExpandEnvironmentNames);
+                RegistryValueKind kind = key.GetValueKind(valueName);
+                writer.WriteLine(FormatRegistryValue(valueName, value, kind));
+            }
+            writer.WriteLine();
+
+            foreach (string subkeyName in key.GetSubKeyNames())
+            {
+                using (RegistryKey subKey = key.OpenSubKey(subkeyName))
+                {
+                    if (subKey != null)
+                    {
+                        ExportKey(subKey, $"{keyPath}\\{subkeyName}", writer);
+                    }
+                }
+            }
+        }
+
+        static string FormatRegistryValue(string name, object value, RegistryValueKind kind)
+        {
+            string formattedName = string.IsNullOrEmpty(name) ? "@" : $"\"{name.Replace("\\", "\\\\").Replace("\"", "\\\"")}\"";
+
+            switch (kind)
+            {
+                case RegistryValueKind.String:
+                    return $"{formattedName}=\"{value.ToString().Replace("\\", "\\\\").Replace("\"", "\\\"")}\"";
+
+                case RegistryValueKind.ExpandString:
+                    string hexExpandString = string.Join(",", BitConverter.ToString(Encoding.Unicode.GetBytes(value.ToString())).Split('-'));
+                    return $"{formattedName}=hex(2):{hexExpandString}";
+
+                case RegistryValueKind.DWord:
+                    return $"{formattedName}=dword:{((uint)(int)value).ToString("x8")}";
+
+                case RegistryValueKind.QWord:
+                    ulong qwordValue = Convert.ToUInt64(value);
+                    return $"{formattedName}=hex(b):{string.Join(",", BitConverter.GetBytes(qwordValue).Select(b => b.ToString("x2")))}";
+
+                case RegistryValueKind.Binary:
+                    return $"{formattedName}=hex:{BitConverter.ToString((byte[])value).Replace("-", ",")}";
+
+                case RegistryValueKind.MultiString:
+                    string[] multiStrings = (string[])value;
+                    var hexValues = multiStrings.SelectMany(s => Encoding.Unicode.GetBytes(s)
+                                                    .Select(b => b.ToString("x2"))
+                                                    .Concat(new[] { "00", "00" }))
+                                                    .ToList();
+                    hexValues.AddRange(new[] { "00", "00" });
+                    return $"{formattedName}=hex(7):{string.Join(",", hexValues)}";
+
+                case RegistryValueKind.None:
+                    byte[] noneData = value as byte[];
+                    string hexNone = string.Join(",", noneData.Select(b => b.ToString("x2")));
+                    return $"{formattedName}=hex(0):{hexNone}";
+
+                default:
+                    throw new NotSupportedException($"Unsupported registry value type: {kind}");
+            }
+        }
+
+        static RegistryKey GetBaseRegistryKey(string keyPath, bool writable = false, bool createSubKey = false)
+        {
+            string[] keyParts = keyPath.Split(new char[] { '\\' }, 2); // Split into root and subkey
+            string root = keyParts[0].ToUpper();
+            string subKey = keyParts.Length > 1 ? keyParts[1] : string.Empty; // If there's no subkey, handle it as empty
+
+            RegistryKey baseKey;
+
+            switch (root)
+            {
+                case "HKEY_LOCAL_MACHINE":
+                    baseKey = Registry.LocalMachine;
+                    break;
+                case "HKEY_CURRENT_USER":
+                    baseKey = Registry.CurrentUser;
+                    break;
+                case "HKEY_CLASSES_ROOT":
+                    baseKey = Registry.ClassesRoot;
+                    break;
+                case "HKEY_USERS":
+                    baseKey = Registry.Users;
+                    break;
+                case "HKEY_CURRENT_CONFIG":
+                    baseKey = Registry.CurrentConfig;
+                    break;
+                default:
+                    throw new NotSupportedException($"Unsupported root key: {root}");
+            }
+
+            if (string.IsNullOrEmpty(subKey)) return baseKey;
+
+            if (createSubKey)
+            {
+                return baseKey.CreateSubKey(subKey, writable);
+            }
+            else
+            {
+                return baseKey.OpenSubKey(subKey, writable);
+            }
+        }
+
     }
 }
