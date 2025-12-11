@@ -635,10 +635,59 @@ namespace FolderViewPainter
         // Find the matching Explorer window, so it can be closed
         static AutomationElement FindWindowByName(string name)
         {
-            return AutomationElement.RootElement.FindFirst(
+            // Try the classic method first (fastest for Windows 10 Explorer)
+            var window = AutomationElement.RootElement.FindFirst(
                 TreeScope.Children,
                 new PropertyCondition(AutomationElement.NameProperty, name)
             );
+            if (window != null)
+                return window;
+
+            // Fallback: look for top-level Explorer windows and check for a selected TabItem with the matching name
+            var explorerWindows = AutomationElement.RootElement.FindAll(
+                TreeScope.Children,
+                new PropertyCondition(AutomationElement.ClassNameProperty, "CabinetWClass")
+            );
+
+            foreach (AutomationElement explorer in explorerWindows)
+            {
+                // Find all TabItems in this Explorer window
+                var tabItems = explorer.FindAll(TreeScope.Descendants,
+                    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.TabItem));
+
+                foreach (AutomationElement tab in tabItems)
+                {
+                    // Check if this tab is selected (active)
+                    object selectionItemPatternObj;
+                    if (tab.TryGetCurrentPattern(SelectionItemPattern.Pattern, out selectionItemPatternObj))
+                    {
+                        var selectionItemPattern = (SelectionItemPattern)selectionItemPatternObj;
+                        if (selectionItemPattern.Current.IsSelected)
+                        {
+                            string tabName = tab.Current.Name;
+                            if (!string.IsNullOrEmpty(tabName) && tabName.Equals(name, StringComparison.OrdinalIgnoreCase))
+                            {
+                                tab.SetFocus();
+                                return explorer;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // As a last resort, check for a Pane with the folder name (for single-tab or non-tabbed cases)
+            foreach (AutomationElement explorer in explorerWindows)
+            {
+                var pane = explorer.FindFirst(TreeScope.Descendants,
+                    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Pane));
+                if (pane != null && !string.IsNullOrEmpty(pane.Current.Name) &&
+                    pane.Current.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                {
+                    return explorer;
+                }
+            }
+
+            return null;
         }
 
         // Find root view window by partial match to drive letter with parentheses
