@@ -27,9 +27,9 @@ You've set up the Explorer folder views for maximum performance by setting all f
 
 ## How to Download and Install
 
-[![image](https://github.com/user-attachments/assets/75e62417-c8ee-43b1-a8a8-a217ce130c91)Download the installer](https://github.com/LesFerch/FolderViewPainter/releases/download/1.3.1/FolderViewPainter-Setup.exe)
+[![image](https://github.com/user-attachments/assets/75e62417-c8ee-43b1-a8a8-a217ce130c91)Download the installer](https://github.com/LesFerch/FolderViewPainter/releases/download/1.3.2/FolderViewPainter-Setup.exe)
 
-[![image](https://github.com/LesFerch/WinSetView/assets/79026235/0188480f-ca53-45d5-b9ff-daafff32869e)Download the zip file](https://github.com/LesFerch/FolderViewPainter/releases/download/1.3.1/FolderViewPainter.zip)
+[![image](https://github.com/LesFerch/WinSetView/assets/79026235/0188480f-ca53-45d5-b9ff-daafff32869e)Download the zip file](https://github.com/LesFerch/FolderViewPainter/releases/download/1.3.2/FolderViewPainter.zip)
 
 **Note**: Some antivirus software may falsely detect the download as a virus. This can happen any time you download a new executable and may require extra steps to whitelist the file.
 
@@ -179,3 +179,4 @@ The *GetBagMRU* function, in the C# source code, is derived from a PowerShell sc
 \
 \
 [![image](https://github.com/LesFerch/WinSetView/assets/79026235/63b7acbc-36ef-4578-b96a-d0b7ea0cba3a)](https://github.com/LesFerch/FolderViewPainter)
+
