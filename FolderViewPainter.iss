@@ -32,6 +32,8 @@ UninstallDisplayIcon={app}\{#MyAppExeName}
 CloseApplications=force
 RestartApplications=no
 ShowLanguageDialog=yes
+SignedUninstaller=yes
+SignTool=Certum
 
 [Files]
 Source: "FolderViewPainter\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
