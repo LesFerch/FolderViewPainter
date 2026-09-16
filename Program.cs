@@ -62,6 +62,7 @@ namespace FolderViewPainter
         static string NodeType3 = null;
         static string NodeType4 = null;
         static string ExportNode;
+        static string ExportGUID;
         static string LeafPath;
         static string ThisPCPath;
         static string UserPath;
@@ -227,10 +228,15 @@ namespace FolderViewPainter
             GetBagNodes();
 
             ExportNode = NodeList[0];
+            ExportGUID = GUIDList[0];
 
             for (int i = 0; i < NodeList.Length; i++)
             {
-                if (ExistRevValue(NodeList[i], GUIDList[i])) { ExportNode = NodeList[i]; }
+                if (ExistRevValue(NodeList[i], GUIDList[i]))
+                {
+                    ExportNode = NodeList[i];
+                    ExportGUID = GUIDList[i];
+                }
             }
 
             if ((NodeType1 == null) && IsSpecial)
@@ -247,8 +253,7 @@ namespace FolderViewPainter
             if (SaveView)
             {
                 RegFile = $@"{RegFolder}{newFileName}.reg";
-                string GUID = GetGUID($@"{ShellBagsKey}\{ExportNode}\Shell\");
-                string keyPath = $@"HKCU\{ShellBagsKey}\{ExportNode}\Shell\{GUID}";
+                string keyPath = $@"HKCU\{ShellBagsKey}\{ExportNode}\Shell\{ExportGUID}";
                 ExportRegistryKey(keyPath, RegFile, true);
                 if (checkboxExp.Checked) ExportExplorerSettings(RegFile, false);
             }
@@ -588,13 +593,33 @@ namespace FolderViewPainter
 
             string Nodes = $"{NodeType1}|{NodeType2}|{NodeType3}|{NodeType4}";
 
-            NodeList = Nodes.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
-            GUIDList = Nodes.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] Nodes0 = Nodes.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
 
-            for (int i = 0; i < NodeList.Length; i++)
+            // Expand each node into one entry per GUID subkey found under its Shell key
+            // (a node can have multiple GUID subkeys after a folder's type is changed)
+            var expandedNodes = new List<string>();
+            var expandedGUIDs = new List<string>();
+
+            foreach (string node in Nodes0)
             {
-                GUIDList[i] = GetGUID($@"{ShellBagsKey}\{NodeList[i]}\Shell\");
+                string[] guids = GetGUIDs($@"{ShellBagsKey}\{node}\Shell\");
+                if (guids.Length == 0)
+                {
+                    expandedNodes.Add(node);
+                    expandedGUIDs.Add("");
+                }
+                else
+                {
+                    foreach (string guid in guids)
+                    {
+                        expandedNodes.Add(node);
+                        expandedGUIDs.Add(guid);
+                    }
+                }
             }
+
+            NodeList = expandedNodes.ToArray();
+            GUIDList = expandedGUIDs.ToArray();
 
         }
 
@@ -732,22 +757,29 @@ namespace FolderViewPainter
         // Get the GUID subkey of the selected node key
         static string GetGUID(string key)
         {
-            string GUID = "";
+            string[] GUIDs = GetGUIDs(key);
+            return GUIDs.Length > 0 ? GUIDs[0] : "";
+        }
+
+        // Get all GUID subkeys of the selected node key (ignoring the "Inherit" key)
+        static string[] GetGUIDs(string key)
+        {
             try
             {
                 using (RegistryKey registryKey = Registry.CurrentUser.OpenSubKey(key))
                 {
                     if (registryKey != null)
                     {
-                        string[] subKeyNames = registryKey.GetSubKeyNames();
-                        if (subKeyNames.Length > 0) { GUID = subKeyNames[0]; }
+                        return registryKey.GetSubKeyNames()
+                            .Where(n => !n.Equals("Inherit", StringComparison.OrdinalIgnoreCase))
+                            .ToArray();
                     }
                 }
             }
             catch
             {
             }
-            return GUID;
+            return new string[0];
         }
 
         // Update exported view reg file with the target (import) node and GUID 
