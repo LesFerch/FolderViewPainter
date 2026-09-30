@@ -103,6 +103,12 @@ namespace FolderViewPainter
                 }
             }
 
+            // Normalize a bare drive letter (e.g. "E:") to include the trailing backslash ("E:\")
+            if (System.Text.RegularExpressions.Regex.IsMatch(Folder, @"^[A-Za-z]:$"))
+            {
+                Folder += @"\";
+            }
+
             if (command == "/install") { InstallContextMenuEntries(); return; }
 
             if (command == "/remove") { RemoveContextMenuEntries(); return; }
@@ -226,6 +232,12 @@ namespace FolderViewPainter
             Thread.Sleep(500);
 
             GetBagNodes();
+
+            if (NodeList.Length == 0)
+            {
+                CustomMessageBox.Show(sNoRoot, sMain);
+                return;
+            }
 
             ExportNode = NodeList[0];
             ExportGUID = GUIDList[0];
